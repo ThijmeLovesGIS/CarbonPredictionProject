@@ -6,3 +6,4 @@ xarray
 rasterio
 localtileserver
 psutil
+Pillow

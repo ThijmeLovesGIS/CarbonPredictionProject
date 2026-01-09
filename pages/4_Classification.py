@@ -169,6 +169,38 @@ st.page_link(
 
 )
 
+import os
+import streamlit as st
+import numpy as np
+
+clas_rel = "Data/Forest_classification.tif"
+clas_abs = os.path.join(os.getcwd(), clas_rel)
+
+st.write("=== Raster diagnostics ===")
+st.write("Relative path:", clas_rel)
+st.write("Absolute path:", clas_abs)
+st.write("Exists:", os.path.exists(clas_abs))
+
+try:
+    import rasterio
+    with rasterio.open(clas_abs) as src:
+        arr = src.read(1)  # first band
+        st.write("dtype:", arr.dtype)
+        st.write("shape (h,w):", arr.shape)
+        # show counts for unique values (small raster - ok)
+        uniques, counts = np.unique(arr, return_counts=True)
+        st.write("unique values:", uniques.tolist())
+        st.write("counts:", counts.tolist())
+        st.write("min/max:", int(arr.min()), int(arr.max()))
+        st.write("crs:", src.crs)
+        st.write("transform:", src.transform)
+        st.write("nodata:", src.nodatavals if hasattr(src, 'nodatavals') else src.nodata)
+        st.write("bounds:", src.bounds)
+except Exception as e:
+    st.error(f"Rasterio error: {e}")
+    st.stop()
+
+
 
 
 

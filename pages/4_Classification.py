@@ -83,7 +83,7 @@ training_samples = leafmap.Map(
     locate_control=False,        
     scale_control=False    
 )
-training_samples.add_basemap("Esri.WorldImagery")
+training_samples.add_basemap("SATELLITE")
 training_samples_file = "Data/TrainingSamples/TrainingSamples.shp"
 sample_style = {
     "stroke": True,
@@ -168,6 +168,7 @@ st.page_link(
     label="-> Carbon prediction"
 
 )
+
 
 
 

@@ -1,6 +1,5 @@
 import streamlit as st
 import leafmap.foliumap as leafmap
-from streamlit_folium import st_folium
 import pandas as pd
 
 st.title("Classification")
@@ -159,7 +158,7 @@ classification.add_legend(
     title="Forest types",
     legend_dict=legend_dict
 )
-st_folium(classification)
+classification.to_streamlit()
 
 st.space(size="small")
 
@@ -169,4 +168,5 @@ st.page_link(
     label="-> Carbon prediction"
 
 )
+
 

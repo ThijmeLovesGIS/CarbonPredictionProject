@@ -142,7 +142,7 @@ classification = leafmap.Map(
     locate_control=False,        
     scale_control=False  
 )
-classification.add_basemap("Esri.WorldImagery")
+classification.add_basemap("SATELLITE")
 clas_file = "Data/Forest_classification.tif"
 classification.add_raster(
             clas_file,
@@ -168,5 +168,6 @@ st.page_link(
     label="-> Carbon prediction"
 
 )
+
 
 

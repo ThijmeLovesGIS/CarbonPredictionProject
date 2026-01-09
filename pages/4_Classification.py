@@ -1,5 +1,6 @@
 import streamlit as st
 import leafmap.foliumap as leafmap
+from streamlit_folium import st_folium
 import pandas as pd
 
 st.title("Classification")
@@ -168,3 +169,4 @@ st.page_link(
     label="-> Carbon prediction"
 
 )
+

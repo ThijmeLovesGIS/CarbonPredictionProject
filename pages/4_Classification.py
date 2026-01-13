@@ -234,7 +234,7 @@ legend_items = [
     Patch(facecolor='lightgrey', edgecolor='black', label="Samos island")
 ]
 ax.legend(handles=legend_items, loc="lower left")
-st.pyplot(fig))
+st.pyplot(fig)
 
 st.space(size="small")
 
@@ -243,6 +243,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

@@ -190,7 +190,9 @@ cmap = ListedColormap(colors)
 
 fig, ax = plt.subplots(figsize=(8, 6))
 
-gdf_wgs84.plot(ax=ax, facecolor='lightgrey', edgecolor="black", linewidth=1, zorder=1)
+fig.patch.set_facecolor("#add8e6")
+ax.set_facecolor("#add8e6") 
+gdf_wgs84.plot(ax=ax, facecolor="lightgrey", edgecolor="black", linewidth=1, zorder=1)
 left, bottom, right, top = extent[0], extent[1], extent[2], extent[3]
 ax.imshow(
     masked,
@@ -203,7 +205,6 @@ ax.imshow(
     zorder=2
 )
 
-ax.set_facecolor('#add8e6') 
 ax.set_xlim(left, right)
 ax.set_ylim(bottom, top)
 
@@ -212,7 +213,7 @@ ax.axis("off")
 legend_items = [
     Patch(facecolor=colors[0], edgecolor="k", label="Coniferous forest"),
     Patch(facecolor=colors[1], edgecolor="k", label="Broadleaf forest"),
-    Patch(facecolor='lightgrey', edgecolor='black', label="Samos island")
+    Patch(facecolor="lightgrey", edgecolor="black", label="Samos island")
 ]
 legend = ax.legend(
     handles=legend_items,
@@ -234,6 +235,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

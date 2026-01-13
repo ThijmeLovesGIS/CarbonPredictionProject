@@ -171,60 +171,70 @@ st.write("The random forest classification leads to this map as a final result:"
 
 #classification.to_streamlit()
 
+import numpy as np
 from rasterio.warp import transform_bounds
+from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.patches import Patch
 
 clas_path = "Data/Forest_classification.tif"
 samos_path = "Data/SamosIsland/SamosGreekGrid.shp"
 
-# load shapefile and reproject to WGS84 (you already do this)
+# Load shapefile and reproject to WGS84 (if you want axes in lon/lat)
 gdf = gpd.read_file(samos_path)
 gdf_wgs84 = gdf.to_crs(epsg=4326)
 
+# Read raster
 with rasterio.open(clas_path) as src:
-    band = src.read(1)
+    band = src.read(1)                   # 2D array of class codes
     raster_crs = src.crs
     # transform raster bounds to WGS84 (minx, miny, maxx, maxy)
     extent = transform_bounds(raster_crs, "EPSG:4326", *src.bounds)
 
-# prepare colormap (same as yours)
+print("Extent (minx,miny,maxx,maxy):", extent)
+print("Unique raster values:", np.unique(band))
+
+# If class 0 is nodata/background, mask it so the shapefile shows through:
+masked = np.ma.masked_equal(band, 0)
+
+# Discrete colormap for classes 1 & 2 (do NOT include the transparent 0 color here)
 colors = [
-    (0, 0, 0, 0.0),
-    (0 / 255.0, 100 / 255.0, 0 / 255.0, 1.0),
-    (144 / 255.0, 238 / 255.0, 144 / 255.0, 1.0)
+    (0/255.0, 100/255.0, 0/255.0),       # class 1: Coniferous
+    (144/255.0, 238/255.0, 144/255.0)   # class 2: Broadleaf
 ]
 cmap = ListedColormap(colors)
+# Use BoundaryNorm so integer class codes map to discrete colors.
+norm = BoundaryNorm([0.5, 1.5, 2.5], cmap.N)  # boundaries between classes
 
 fig, ax = plt.subplots(figsize=(8, 6))
 
-# 1) Plot the shapefile first (background), zorder low
-gdf_wgs84.plot(ax=ax, facecolor="lightgrey", edgecolor="black", linewidth=1, zorder=1)
+# 1) Plot shapefile as background
+gdf_wgs84.plot(ax=ax, facecolor='lightgrey', edgecolor="black", linewidth=1, zorder=1)
 
-# 2) Draw raster using the geographic extent in WGS84, zorder higher so it sits ON TOP.
-#    If you want the shapefile *as background under the raster*, keep zorder as shown.
-#    If you want the shapefile fully behind (and raster semi-transparent) you can set alpha<1.
+# 2) Plot raster on top using geographic extent; map extent = (left, right, bottom, top)
+left, bottom, right, top = extent[0], extent[1], extent[2], extent[3]
 ax.imshow(
-    band,
+    masked,
     cmap=cmap,
-    vmin=0,
-    vmax=2,
+    norm=norm,
+    extent=(left, right, bottom, top),
     origin="upper",
-    extent=extent,      # important: maps image to geographic coords
-    zorder=2,
-    interpolation="nearest"
+    interpolation="nearest",
+    zorder=2
 )
 
-# set view limits to the raster extents (or to the shapefile bounds)
-ax.set_xlim(extent[0], extent[2])
-ax.set_ylim(extent[1], extent[3])
+# Optionally zoom to raster extent (or to the shapefile bounds if you prefer)
+ax.set_xlim(left, right)
+ax.set_ylim(bottom, top)
 
 ax.axis("off")
+
 legend_items = [
-    Patch(facecolor=colors[1][:3], edgecolor="k", label="Coniferous forest"),
-    Patch(facecolor=colors[2][:3], edgecolor="k", label="Broadleaf forest"),
-    Patch(facecolor="lightgrey", edgecolor="black", label="Samos island")
+    Patch(facecolor=colors[0], edgecolor="k", label="Coniferous forest"),
+    Patch(facecolor=colors[1], edgecolor="k", label="Broadleaf forest"),
+    Patch(facecolor='lightgrey', edgecolor='black', label="Samos island")
 ]
 ax.legend(handles=legend_items, loc="lower left")
-st.pyplot(fig)
+st.pyplot(fig))
 
 st.space(size="small")
 
@@ -233,6 +243,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

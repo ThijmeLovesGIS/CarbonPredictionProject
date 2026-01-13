@@ -158,13 +158,7 @@ classification.add_legend(
     title="Forest types",
     legend_dict=legend_dict
 )
-import rasterio
 
-with rasterio.open(clas_file) as src:
-    bounds = src.bounds
-    west, south, east, north = bounds.left, bounds.bottom, bounds.right, bounds.top
-
-classification.fit_bounds([[south, west], [north, east]])
 classification.to_streamlit()
 
 st.space(size="small")
@@ -174,6 +168,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

@@ -161,47 +161,68 @@ st.write("The random forest classification leads to this map as a final result:"
 #)
 
 #classification.to_streamlit()
-import pydeck as pdk
+
+import os
+import io
+import base64
 import rasterio
 import numpy as np
-from pydeck.types import Image
+from PIL import Image
+import pydeck as pdk
+import streamlit as st
 
-clas_file = "Data/Forest_classification.tif"
+# Path to your TIFF
+tif_path = os.path.join(os.getcwd(), "Data", "Forest_classification.tif")
 
-with rasterio.open(clas_file) as src:
-    data = src.read(1)
-    bounds = src.bounds
+with rasterio.open(tif_path) as src:
+    band = src.read(1)
+    left, bottom, right, top = src.bounds.left, src.bounds.bottom, src.bounds.right, src.bounds.top
+    # compute center
+    center_lat = (top + bottom) / 2.0
+    center_lon = (left + right) / 2.0
 
-# Create RGB image
-rgb = np.zeros((data.shape[0], data.shape[1], 3), dtype=np.uint8)
+# color mapping (0 -> transparent)
+cmap = {
+    0: (0, 0, 0, 0),
+    1: (0, 100, 0, 255),
+    2: (144, 238, 144, 255)
+}
 
-# Class mapping
-rgb[data == 1] = [0, 100, 0]       # Coniferous forest
-rgb[data == 2] = [144, 238, 144]  # Broadleaf
+h, w = band.shape
+img = np.zeros((h, w, 4), dtype=np.uint8)
+for val, col in cmap.items():
+    img[band == val] = col
 
-image = Image.from_array(rgb)
+# Optionally downsample to reduce size (uncomment to use)
+# from PIL import Image
+# pil = Image.fromarray(img)
+# pil = pil.resize((w//2, h//2), Image.Resampling.LANCZOS)
+# buffer = io.BytesIO()
+# pil.save(buffer, format="PNG", optimize=True)
+# png_bytes = buffer.getvalue()
 
-layer = pdk.Layer(
+# Save to buffer as PNG
+buffer = io.BytesIO()
+Image.fromarray(img).save(buffer, format="PNG", optimize=True)
+png_bytes = buffer.getvalue()
+
+# Encode as data URI (for local embedded use)
+data_uri = "data:image/png;base64," + base64.b64encode(png_bytes).decode("utf-8")
+
+# Build pydeck BitmapLayer
+bitmap = pdk.Layer(
     "BitmapLayer",
-    image=image,
-    bounds=[
-        [bounds.left, bounds.bottom],
-        [bounds.right, bounds.top]
-    ],
-    opacity=0.85
+    data=None,
+    image=data_uri,
+    bounds=[[left, bottom], [right, top]],  # [[minLon,minLat],[maxLon,maxLat]]
+    opacity=0.8,
+    pickable=False,
 )
-view_state = pdk.ViewState(
-    latitude=(bounds.top + bounds.bottom) / 2,
-    longitude=(bounds.left + bounds.right) / 2,
-    zoom=10
-)
-st.pydeck_chart(
-    pdk.Deck(
-        layers=[layer],
-        initial_view_state=view_state,
-        map_style="mapbox://styles/mapbox/satellite-v9"
-    )
-)
+
+view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=11)
+deck = pdk.Deck(layers=[bitmap], initial_view_state=view_state, map_style="light")
+
+st.pydeck_chart(deck)
 
 st.space(size="small")
 
@@ -210,6 +231,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

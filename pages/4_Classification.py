@@ -174,18 +174,27 @@ st.write("The random forest classification leads to this map as a final result:"
 clas_path = "Data/Forest_classification.tif"
 with rasterio.open(clas_path) as src:
     band = src.read(1)
+         
+samos_path = "Data/SamosIsland/SamosIsland/SamosGreekGrid.shp"
+gdf = gpd.read_file(samos_path)
+gdf_wgs84 = gdf.to_crs(epsg=4326)
+
 colors = [
     (0, 0, 0, 0.0),               
     (0 / 255.0, 100 / 255.0, 0 / 255.0, 1.0),  
     (144 / 255.0, 238 / 255.0, 144 / 255.0, 1.0)
 ]
 cmap = ListedColormap(colors)
+
 fig, ax = plt.subplots(figsize=(8, 6))
+gdf.plot(ax=ax, facecolor='lightgrey', edgecolor='black', linewidth=1)
 ax.imshow(band, cmap=cmap, vmin=0, vmax=2, origin="upper")
+
 ax.axis("off")
 legend_items = [
     Patch(facecolor=colors[1][:3], edgecolor="k", label="Coniferous forest"),
     Patch(facecolor=colors[2][:3], edgecolor="k", label="Broadleaf forest"),
+    Patch(facecolor='lightgrey', edgecolor='black', label="Samos island")
 ]
 ax.legend(handles=legend_items, loc="lower left")
 st.pyplot(fig)
@@ -197,6 +206,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

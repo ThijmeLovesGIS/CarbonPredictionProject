@@ -170,8 +170,8 @@ st.write("The random forest classification leads to this map as a final result:"
 
 #classification.to_streamlit()
 
-tif_path = "Data/Forest_classification.tif"
-with rasterio.open(tif_path) as src:
+clas_path = "Data/Forest_classification.tif"
+with rasterio.open(clas_path) as src:
     band = src.read(1)
 colors = [
     (0, 0, 0, 0.0),               
@@ -181,7 +181,6 @@ colors = [
 cmap = ListedColormap(colors)
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.imshow(band, cmap=cmap, vmin=0, vmax=2, origin="upper")
-ax.set_title("Forest classification")
 ax.axis("off")
 legend_items = [
     Patch(facecolor=colors[1][:3], edgecolor="k", label="Coniferous forest"),
@@ -197,6 +196,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

@@ -1,6 +1,12 @@
+import os
 import streamlit as st
+import rasterio
 import leafmap.foliumap as leafmap
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.patches import Patch
 
 st.title("Classification")
 st.write("To be able to predict the amount of Carbon stored on the forests of Samos a forest classification map is needed. This then can be used for area calculation and other calculations. Copernicus provides a classification map called Corine Land Cover which could be used. However, this map will be less precise due to it being more general for the world and is from 2018. No other classification maps/data exists for the island of Samos. So for more recent and a more accurate classification it was decided to make a forest classification map based on Sentinel 2 imagery. Various classification models exist, but it was opted to use the random forest algorithmn. This algorithmn was chosen since it has high dimensionality so can process the high amount of bands and reduce noise bias. It can also capture complex boundaries better which is case for the forests here on Samos.")
@@ -164,52 +170,24 @@ st.write("The random forest classification leads to this map as a final result:"
 
 #classification.to_streamlit()
 
-import os
-import streamlit as st
-import rasterio
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap, BoundaryNorm
-from matplotlib.patches import Patch
-
-st.set_page_config(layout="wide")
-st.title("Forest classification — simple static plot")
-
-# Path to your GeoTIFF
-tif_path = os.path.join(os.getcwd(), "Data", "Forest_classification.tif")
-
-if not os.path.exists(tif_path):
-    st.error(f"GeoTIFF not found: {tif_path}")
-    st.stop()
-
-# Read first band
+tif_path = "Data/Forest_classification.tif"
 with rasterio.open(tif_path) as src:
     band = src.read(1)
-
-# Define colors for classes: 0 = transparent, 1 = dark green, 2 = light green
 colors = [
-    (0, 0, 0, 0.0),                # class 0 -> transparent
-    (0 / 255.0, 100 / 255.0, 0 / 255.0, 1.0),   # class 1 -> dark green
-    (144 / 255.0, 238 / 255.0, 144 / 255.0, 1.0) # class 2 -> light green
+    (0, 0, 0, 0.0),               
+    (0 / 255.0, 100 / 255.0, 0 / 255.0, 1.0),  
+    (144 / 255.0, 238 / 255.0, 144 / 255.0, 1.0)
 ]
-
 cmap = ListedColormap(colors)
-# boundaries between class values: [-0.5, 0.5, 1.5, 2.5] maps values 0,1,2 to colors above
-norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5], ncolors=cmap.N)
-
-# Plot
 fig, ax = plt.subplots(figsize=(8, 6))
-ax.imshow(band, cmap=cmap, norm=norm, origin="upper")
-ax.set_title("Forest classification (static)")
+ax.imshow(band, cmap=cmap, vmin=0, vmax=2, origin="upper")
+ax.set_title("Forest classification")
 ax.axis("off")
-
-# Legend
 legend_items = [
-    Patch(facecolor=colors[1][:3], edgecolor="k", label="Coniferous forest (1)"),
-    Patch(facecolor=colors[2][:3], edgecolor="k", label="Broadleaf forest (2)"),
+    Patch(facecolor=colors[1][:3], edgecolor="k", label="Coniferous forest"),
+    Patch(facecolor=colors[2][:3], edgecolor="k", label="Broadleaf forest"),
 ]
 ax.legend(handles=legend_items, loc="lower left")
-
 st.pyplot(fig)
 
 st.space(size="small")
@@ -219,6 +197,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

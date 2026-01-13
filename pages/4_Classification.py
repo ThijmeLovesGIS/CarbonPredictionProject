@@ -163,18 +163,17 @@ st.write("The random forest classification leads to this map as a final result:"
 #classification.to_streamlit()
 
 import os
-import io
-import base64
 import rasterio
 import numpy as np
 from PIL import Image
-import pydeck as pdk
+import tempfile
+import folium
+from streamlit.components.v1 import html as st_html
 import streamlit as st
 
-# Path to your TIFF
 tif_path = os.path.join(os.getcwd(), "Data", "Forest_classification.tif")
 
-# Read raster and bounds
+# Read raster and compute bounds/center
 with rasterio.open(tif_path) as src:
     band = src.read(1)
     left, bottom, right, top = src.bounds.left, src.bounds.bottom, src.bounds.right, src.bounds.top
@@ -193,66 +192,29 @@ img = np.zeros((h, w, 4), dtype=np.uint8)
 for val, col in cmap.items():
     img[band == val] = col
 
-# Downsample to keep data-uri small (adjust max_dim as needed)
-max_dim = 1024  # reduce if still large (e.g., 512)
-scale = min(1.0, max_dim / max(h, w))
-if scale < 1.0:
-    pil = Image.fromarray(img)
-    new_size = (max(1, int(w * scale)), max(1, int(h * scale)))
-    pil = pil.resize(new_size, Image.Resampling.LANCZOS)
-else:
-    pil = Image.fromarray(img)
+# Optionally downsample here if needed (to reduce PNG size)
+# e.g. resize to half: pil = Image.fromarray(img).resize((w//2, h//2), Image.Resampling.LANCZOS)
+pil = Image.fromarray(img)
 
-# Save to buffer as PNG and create data URI
-buf = io.BytesIO()
-pil.save(buf, format="PNG", optimize=True)
-png_bytes = buf.getvalue()
-data_uri = "data:image/png;base64," + base64.b64encode(png_bytes).decode("utf-8")
+# Save PNG to a temp file (folium expects a path or URL)
+tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+pil.save(tmp.name, optimize=True)
 
-# Bounds for pydeck: [[minLon, minLat], [maxLon, maxLat]]
-bounds = [[left, bottom], [right, top]]
+# Build folium map and add the PNG overlay
+m = folium.Map(location=[center_lat, center_lon], zoom_start=11, tiles="OpenStreetMap")
+folium.raster_layers.ImageOverlay(
+    image=tmp.name,
+    bounds=[[bottom, left], [top, right]],
+    name="Forest overlay",
+    opacity=0.8,
+    interactive=True,
+    cross_origin=False
+).add_to(m)
+folium.LayerControl().add_to(m)
 
-# Diagnostic prints (helpful)
-st.write("PNG bytes (MB):", round(len(png_bytes) / (1024*1024), 2))
-st.write("Bounds:", bounds)
-st.write("Center:", (center_lat, center_lon))
-
-# Try pydeck BitmapLayer (wrapped in try so we can fallback)
-try:
-    bitmap = pdk.Layer(
-        "BitmapLayer",
-        data=None,               # pydeck examples use data=None for BitmapLayer
-        image=data_uri,
-        bounds=bounds,
-        opacity=0.8,
-        pickable=False,
-    )
-
-    view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=11)
-    deck = pdk.Deck(layers=[bitmap], initial_view_state=view_state, map_style=None)
-    st.pydeck_chart(deck)
-except Exception as e:
-    st.warning(f"pydeck BitmapLayer failed: {e}. Falling back to folium overlay.")
-    # Folium fallback (should always work)
-    import folium
-    from streamlit.components.v1 import html as st_html
-    tmp_map = folium.Map(location=[center_lat, center_lon], zoom_start=11, tiles="OpenStreetMap")
-    # Save PIL image to a temporary file and add ImageOverlay
-    tmp_buf = io.BytesIO()
-    pil.save(tmp_buf, format="PNG", optimize=True)
-    tmp_buf.seek(0)
-    # Write to a temp file on disk because folium.ImageOverlay expects a path/URL
-    import tempfile
-    tmpfile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-    tmpfile.write(tmp_buf.read())
-    tmpfile.flush()
-    folium.raster_layers.ImageOverlay(
-        image=tmpfile.name,
-        bounds=bounds,
-        opacity=0.8,
-    ).add_to(tmp_map)
-    folium.LayerControl().add_to(tmp_map)
-    st_html(tmp_map._repr_html_(), height=600)
+# Render in Streamlit
+st.success("Showing classification as a folium ImageOverlay (fallback to avoid pydeck JSON error).")
+st_html(m._repr_html_(), height=600)
 
 st.space(size="small")
 
@@ -261,6 +223,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

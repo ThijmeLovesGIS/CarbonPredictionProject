@@ -164,6 +164,7 @@ st.write("The random forest classification leads to this map as a final result:"
 import pydeck as pdk
 import rasterio
 import numpy as np
+from pydeck.types import Image
 
 clas_file = "Data/Forest_classification.tif"
 
@@ -176,11 +177,13 @@ rgb = np.zeros((data.shape[0], data.shape[1], 3), dtype=np.uint8)
 
 # Class mapping
 rgb[data == 1] = [0, 100, 0]       # Coniferous forest
-rgb[data == 2] = [144, 238, 144]  
+rgb[data == 2] = [144, 238, 144]  # Broadleaf
+
+image = Image.from_array(rgb)
 
 layer = pdk.Layer(
     "BitmapLayer",
-    image=rgb,
+    image=image,
     bounds=[
         [bounds.left, bounds.bottom],
         [bounds.right, bounds.top]
@@ -190,9 +193,7 @@ layer = pdk.Layer(
 view_state = pdk.ViewState(
     latitude=(bounds.top + bounds.bottom) / 2,
     longitude=(bounds.left + bounds.right) / 2,
-    zoom=10,
-    bearing=0,
-    pitch=0
+    zoom=10
 )
 st.pydeck_chart(
     pdk.Deck(
@@ -209,6 +210,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

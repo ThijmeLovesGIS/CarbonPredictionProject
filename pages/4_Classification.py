@@ -158,7 +158,6 @@ classification.add_legend(
     title="Forest types",
     legend_dict=legend_dict
 )
-classification.add_inspector()
 classification.to_streamlit()
 
 st.space(size="small")
@@ -168,6 +167,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

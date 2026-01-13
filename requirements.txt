@@ -10,3 +10,4 @@ Pillow
 numpy
 rio-cogeo
 rasterio
+pydeck

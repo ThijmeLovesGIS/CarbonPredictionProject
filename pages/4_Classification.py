@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 import rasterio
+from rasterio.warp import transform_bounds
 import leafmap.foliumap as leafmap
 import pandas as pd
 import numpy as np
@@ -171,58 +172,38 @@ st.write("The random forest classification leads to this map as a final result:"
 
 #classification.to_streamlit()
 
-import numpy as np
-from rasterio.warp import transform_bounds
-from matplotlib.colors import ListedColormap, BoundaryNorm
-from matplotlib.patches import Patch
-
 clas_path = "Data/Forest_classification.tif"
 samos_path = "Data/SamosIsland/SamosGreekGrid.shp"
-
-# Load shapefile and reproject to WGS84 (if you want axes in lon/lat)
 gdf = gpd.read_file(samos_path)
 gdf_wgs84 = gdf.to_crs(epsg=4326)
-
-# Read raster
 with rasterio.open(clas_path) as src:
-    band = src.read(1)                   # 2D array of class codes
+    band = src.read(1)                  
     raster_crs = src.crs
-    # transform raster bounds to WGS84 (minx, miny, maxx, maxy)
     extent = transform_bounds(raster_crs, "EPSG:4326", *src.bounds)
-
-print("Extent (minx,miny,maxx,maxy):", extent)
-print("Unique raster values:", np.unique(band))
-
-# If class 0 is nodata/background, mask it so the shapefile shows through:
+         
 masked = np.ma.masked_equal(band, 0)
-
-# Discrete colormap for classes 1 & 2 (do NOT include the transparent 0 color here)
 colors = [
-    (0/255.0, 100/255.0, 0/255.0),       # class 1: Coniferous
-    (144/255.0, 238/255.0, 144/255.0)   # class 2: Broadleaf
+    (0/255.0, 100/255.0, 0/255.0),
+    (144/255.0, 238/255.0, 144/255.0) 
 ]
 cmap = ListedColormap(colors)
-# Use BoundaryNorm so integer class codes map to discrete colors.
-norm = BoundaryNorm([0.5, 1.5, 2.5], cmap.N)  # boundaries between classes
 
 fig, ax = plt.subplots(figsize=(8, 6))
 
-# 1) Plot shapefile as background
 gdf_wgs84.plot(ax=ax, facecolor='lightgrey', edgecolor="black", linewidth=1, zorder=1)
-
-# 2) Plot raster on top using geographic extent; map extent = (left, right, bottom, top)
 left, bottom, right, top = extent[0], extent[1], extent[2], extent[3]
 ax.imshow(
     masked,
     cmap=cmap,
-    norm=norm,
+    vmin=0,
+    vmax=2,
     extent=(left, right, bottom, top),
     origin="upper",
     interpolation="nearest",
     zorder=2
 )
 
-# Optionally zoom to raster extent (or to the shapefile bounds if you prefer)
+ax.set_facecolor('#add8e6') 
 ax.set_xlim(left, right)
 ax.set_ylim(bottom, top)
 
@@ -233,7 +214,17 @@ legend_items = [
     Patch(facecolor=colors[1], edgecolor="k", label="Broadleaf forest"),
     Patch(facecolor='lightgrey', edgecolor='black', label="Samos island")
 ]
-ax.legend(handles=legend_items, loc="lower left")
+legend = ax.legend(
+    handles=legend_items,
+    loc="lower left",
+    fontsize=9,           
+    frameon=True,
+    framealpha=0.9,
+    handlelength=1, 
+    handleheight=1,
+    borderpad=0.4,
+    labelspacing=0.3
+)
 st.pyplot(fig)
 
 st.space(size="small")
@@ -243,6 +234,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

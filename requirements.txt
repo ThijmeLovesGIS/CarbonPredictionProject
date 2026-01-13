@@ -12,3 +12,4 @@ rio-cogeo
 rasterio
 pydeck
 matplotlib
+geopandas

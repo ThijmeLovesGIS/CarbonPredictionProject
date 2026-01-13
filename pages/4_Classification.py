@@ -134,33 +134,73 @@ st.space(size="small")
          
 st.subheader("Final classification map")
 st.write("The random forest classification leads to this map as a final result:")
-classification = leafmap.Map(
-    zoom_control=True, 
-    attribution_control=False,   
-    draw_control=False,          
-    measure_control=False,       
-    locate_control=False,        
-    scale_control=False  
-)
-classification.add_basemap("SATELLITE")
+#classification = leafmap.Map(
+#    zoom_control=True, 
+#    attribution_control=False,   
+#    draw_control=False,          
+#    measure_control=False,       
+#    locate_control=False,        
+#    scale_control=False  
+#)
+#classification.add_basemap("SATELLITE")
+#clas_file = "Data/Forest_classification.tif"
+#classification.add_raster(
+#            clas_file,
+#            layer_name="Forest classification",
+#           palette=["#00000000", "#006400", "#90ee90"],
+#           nodata=0
+#)
+
+#legend_dict = {
+#    "Coniferous forest": "#006400",
+#    "Broadleaf forest": "#90ee90"
+#}
+#classification.add_legend(
+#    title="Forest types",
+#    legend_dict=legend_dict
+#)
+
+#classification.to_streamlit()
+import pydeck as pdk
+import rasterio
+import numpy as np
+
 clas_file = "Data/Forest_classification.tif"
-classification.add_raster(
-            clas_file,
-            layer_name="Forest classification",
-           palette=["#00000000", "#006400", "#90ee90"],
-           nodata=0
-)
 
-legend_dict = {
-    "Coniferous forest": "#006400",
-    "Broadleaf forest": "#90ee90"
-}
-classification.add_legend(
-    title="Forest types",
-    legend_dict=legend_dict
-)
+with rasterio.open(clas_file) as src:
+    data = src.read(1)
+    bounds = src.bounds
 
-classification.to_streamlit()
+# Create RGB image
+rgb = np.zeros((data.shape[0], data.shape[1], 3), dtype=np.uint8)
+
+# Class mapping
+rgb[data == 1] = [0, 100, 0]       # Coniferous forest
+rgb[data == 2] = [144, 238, 144]  
+
+layer = pdk.Layer(
+    "BitmapLayer",
+    image=rgb,
+    bounds=[
+        [bounds.left, bounds.bottom],
+        [bounds.right, bounds.top]
+    ],
+    opacity=0.85
+)
+view_state = pdk.ViewState(
+    latitude=(bounds.top + bounds.bottom) / 2,
+    longitude=(bounds.left + bounds.right) / 2,
+    zoom=10,
+    bearing=0,
+    pitch=0
+)
+st.pydeck_chart(
+    pdk.Deck(
+        layers=[layer],
+        initial_view_state=view_state,
+        map_style="mapbox://styles/mapbox/satellite-v9"
+    )
+)
 
 st.space(size="small")
 
@@ -169,6 +209,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

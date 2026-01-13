@@ -16,7 +16,7 @@ st.dataframe(c_ha, hide_index=True)
 st.space(size="small")
 
 st.subheader("Area per forest type")
-st.write("The second part which is need is to calculate the area per forest type in hectares. First it is needed to count the number of pixels per forest type. Using this together with the pixel size in hectares (pixel height*pixel width/10000). It results in the total area in hectares per forest type. As seen in the table below:")
+st.write("The second part which is needed is to calculate the area per forest type in hectares. First it is needed to count the number of pixels per forest type. Using this together with the pixel size in hectares (pixel height*pixel width/10000). It results in the total area in hectares per forest type. As seen in the table below:")
 a_ft = df[["Forest type", "Pixel count", "Area (ha)"]]
 st.dataframe(a_ft, hide_index=True)
 
@@ -38,4 +38,5 @@ st.subheader("Click below to read ideas for further research and further improve
 st.page_link(
     "pages/6_Further_research.py",
     label="-> Further research"
+
 )

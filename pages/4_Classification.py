@@ -174,14 +174,14 @@ import streamlit as st
 # Path to your TIFF
 tif_path = os.path.join(os.getcwd(), "Data", "Forest_classification.tif")
 
+# Read raster and bounds
 with rasterio.open(tif_path) as src:
     band = src.read(1)
     left, bottom, right, top = src.bounds.left, src.bounds.bottom, src.bounds.right, src.bounds.top
-    # compute center
     center_lat = (top + bottom) / 2.0
     center_lon = (left + right) / 2.0
 
-# color mapping (0 -> transparent)
+# Color mapping (0 -> transparent)
 cmap = {
     0: (0, 0, 0, 0),
     1: (0, 100, 0, 255),
@@ -193,36 +193,66 @@ img = np.zeros((h, w, 4), dtype=np.uint8)
 for val, col in cmap.items():
     img[band == val] = col
 
-# Optionally downsample to reduce size (uncomment to use)
-# from PIL import Image
-# pil = Image.fromarray(img)
-# pil = pil.resize((w//2, h//2), Image.Resampling.LANCZOS)
-# buffer = io.BytesIO()
-# pil.save(buffer, format="PNG", optimize=True)
-# png_bytes = buffer.getvalue()
+# Downsample to keep data-uri small (adjust max_dim as needed)
+max_dim = 1024  # reduce if still large (e.g., 512)
+scale = min(1.0, max_dim / max(h, w))
+if scale < 1.0:
+    pil = Image.fromarray(img)
+    new_size = (max(1, int(w * scale)), max(1, int(h * scale)))
+    pil = pil.resize(new_size, Image.Resampling.LANCZOS)
+else:
+    pil = Image.fromarray(img)
 
-# Save to buffer as PNG
-buffer = io.BytesIO()
-Image.fromarray(img).save(buffer, format="PNG", optimize=True)
-png_bytes = buffer.getvalue()
-
-# Encode as data URI (for local embedded use)
+# Save to buffer as PNG and create data URI
+buf = io.BytesIO()
+pil.save(buf, format="PNG", optimize=True)
+png_bytes = buf.getvalue()
 data_uri = "data:image/png;base64," + base64.b64encode(png_bytes).decode("utf-8")
 
-# Build pydeck BitmapLayer
-bitmap = pdk.Layer(
-    "BitmapLayer",
-    data=None,
-    image=data_uri,
-    bounds=[[left, bottom], [right, top]],  # [[minLon,minLat],[maxLon,maxLat]]
-    opacity=0.8,
-    pickable=False,
-)
+# Bounds for pydeck: [[minLon, minLat], [maxLon, maxLat]]
+bounds = [[left, bottom], [right, top]]
 
-view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=11)
-deck = pdk.Deck(layers=[bitmap], initial_view_state=view_state, map_style="light")
+# Diagnostic prints (helpful)
+st.write("PNG bytes (MB):", round(len(png_bytes) / (1024*1024), 2))
+st.write("Bounds:", bounds)
+st.write("Center:", (center_lat, center_lon))
 
-st.pydeck_chart(deck)
+# Try pydeck BitmapLayer (wrapped in try so we can fallback)
+try:
+    bitmap = pdk.Layer(
+        "BitmapLayer",
+        data=None,               # pydeck examples use data=None for BitmapLayer
+        image=data_uri,
+        bounds=bounds,
+        opacity=0.8,
+        pickable=False,
+    )
+
+    view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=11)
+    deck = pdk.Deck(layers=[bitmap], initial_view_state=view_state, map_style=None)
+    st.pydeck_chart(deck)
+except Exception as e:
+    st.warning(f"pydeck BitmapLayer failed: {e}. Falling back to folium overlay.")
+    # Folium fallback (should always work)
+    import folium
+    from streamlit.components.v1 import html as st_html
+    tmp_map = folium.Map(location=[center_lat, center_lon], zoom_start=11, tiles="OpenStreetMap")
+    # Save PIL image to a temporary file and add ImageOverlay
+    tmp_buf = io.BytesIO()
+    pil.save(tmp_buf, format="PNG", optimize=True)
+    tmp_buf.seek(0)
+    # Write to a temp file on disk because folium.ImageOverlay expects a path/URL
+    import tempfile
+    tmpfile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    tmpfile.write(tmp_buf.read())
+    tmpfile.flush()
+    folium.raster_layers.ImageOverlay(
+        image=tmpfile.name,
+        bounds=bounds,
+        opacity=0.8,
+    ).add_to(tmp_map)
+    folium.LayerControl().add_to(tmp_map)
+    st_html(tmp_map._repr_html_(), height=600)
 
 st.space(size="small")
 
@@ -231,6 +261,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

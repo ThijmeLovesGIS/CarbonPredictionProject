@@ -218,6 +218,7 @@ legend_items = [
 legend = ax.legend(
     handles=legend_items,
     loc="lower left",
+    title="Legend",
     fontsize=9,           
     frameon=True,
     framealpha=0.9,
@@ -226,6 +227,18 @@ legend = ax.legend(
     borderpad=0.4,
     labelspacing=0.3
 )
+
+ax.annotate(
+    "N",
+    xy=(0.07, 0.90),
+    xytext=(0.07, 0.80),
+    arrowprops=dict(facecolor="black", width=4, headwidth=12),
+    ha="center", va="center",
+    fontsize=12,
+    xycoords=ax.transAxes,
+    zorder=5
+)
+
 st.pyplot(fig)
 
 st.space(size="small")
@@ -235,6 +248,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

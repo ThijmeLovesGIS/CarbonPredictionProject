@@ -233,9 +233,11 @@ from matplotlib_map_utils.core.scale_bar import ScaleBar, scale_bar
 NorthArrow.set_size("small")
 ScaleBar.set_size("small")
 north_arrow(
-    ax, location="upper left", rotation={"crs": gdf_wgs84.crs, "reference": "center"}
+    ax,
+    location="upper left",
+    rotation={"crs": "EPSG:4326", "reference": "center"}
 )
-scale_bar(ax, location="bottom left", style="boxes", bar={"projection": gdf_wgs84.crs})
+scale_bar(ax, location="bottom left", style="boxes", bar={"projection": "EPSG:4326"})
 
 st.pyplot(fig)
 
@@ -246,6 +248,7 @@ st.page_link(
     "pages/5_Total_carbon_stored.py",
     label="-> Carbon prediction"
 )
+
 
 
 

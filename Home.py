@@ -1,18 +1,18 @@
 import streamlit as st
 
 st.title("Carbon prediction project")
-st.write("Welcome to the Streamlit which will take you through the project I have been working during my time at Archipelagos Institute of Marine Conservation (01/09/2025-30/01/2026).")
+st.write("Welcome to the Streamlit, which will take you through the project I have been working on during my time at the Archipelagos Institute of Marine Conservation (01/09/2025-30/01/2026).")
 
 st.space(size="small")
 
 st.header("Who am I")
-st.write("I am Thijme Jonckers, 20 years old and from the Netherlands. Currently I'm in my last year of my Bsc International Forest and Nature Management specialising in Tropical Forestry at Van Hall Larenstein Univeristy of Applied Sciences.")
-st.write("For my final year at university it is required to complete a 5 month internship. I got the oppurtunity to follow this internship at Archipelagos Institute of Marine Conservation in the GIS team. This was perfect since during my study I discovered my interest for GIS and data analysis and using this to solve real-world environmental problems. This perfectly aligns with the oppurtunity I got at Archipelagos.")
+st.write("My name is Thijme Jonckers, I am 20 years old and from the Netherlands. I am currently in my final year of my Bsc International Forest and Nature Management, specialising in Tropical Forestry at Van Hall Larenstein University of Applied Sciences.")
+st.write("During my final year at university it is required to complete a 5 month internship. I got the opportunity to follow an internship at Archipelagos Institute of Marine Conservation with the GIS team. During my study I discovered my interest in GIS and data analysis, and using these methods to solve real-world environmental problems. As such, the GIS-internship I got offered at Archipelagos was perfect for me.")
 
 st.space(size="small")
 
 st.header("Goal")
-st.write("In my time here I worked on a project to estimate how much carbon is stored on the island of Samos in Greece. This work contributes to some of the conservation goals that Archipelagos aims to achieve. Next to that this is a final project for my internship to show how I developed my skills in my time here. But also to show how I adapted my knowledge I gathered during the past three years at university. During my stay here I also needed to work on personal goals setup by the univeristy and myself to further develop myself. That is why I decided to do this project in Python since I had no previous knowledge on using the programming language and it playing a essential part in the GIS sphere. That is why I decided to learn how to adapt my GIS knowledge by use of Python.")
+st.write("During my time here I worked on a project to estimate how much carbon is stored on the island of Samos, Greece. This work contributes to some of the conservation goals that Archipelagos aims to achieve. Moreover, this served as a  final project  that showed how I could apply the knowledge I gained at my university while additionally  developing my skills further During my stay at Archipelagos,I also needed to work on personal goals that were set up by the university. As such, I decided to do this project in Python since I had no previous knowledge on using the programming language while it plays an essential part in the GIS sphere. Thus, I decided to learn how to adapt my GIS knowledge by using Python.")
 
 st.space(size="small")
 
@@ -48,4 +48,5 @@ st.space(size="small")
 
 st.subheader("Disclaimer")
 
-st.write("The results of this project are a prediction and not a precise conclusion on the total amount of carbon stored. It is meant to give more an idea of the amount then a final conclusion.")
+st.write("The results of this project are a prediction and not a precise conclusion on the total amount of carbon stored. It is meant to give an estimate, rather than a final conclusion.")
+
